@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: exporter-kubelets
+    chart: exporter-kubelets-0.2.11
+    component: kubelets
+    heritage: Tiller
+    prometheus: kube-prometheus
+    release: kube-prometheus-exporter-kubelets
+  name: kube-prometheus-exporter-kubelets
+  namespace: monitoring
+spec:
+  endpoints:
+  - interval: 15s
+    port: http-metrics
+  - honorLabels: true
+    interval: 30s
+    port: cadvisor
+  jobLabel: component
+  namespaceSelector:
+    matchNames:
+    - kube-system
+  selector:
+    matchLabels:
+      k8s-app: kubelet

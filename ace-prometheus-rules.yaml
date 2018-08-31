@@ -1,0 +1,81 @@
+apiVersion: v1
+data:
+  acecpuusage.rules: |-
+    groups:
+    - name: acenodecpuusage.rules
+      rules:
+      - alert: aceNodeCPUUsage
+        expr: (100 * (1 - avg by(instance)(irate(node_cpu{mode='idle'}[5m])))) > 75
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          description: CPU usage is above 75%
+          summary: High CPU usage detected
+  acememoryusage.rules: |-
+    groups:
+    - name: acenodemem.rules
+      rules:
+      - alert: aceNodeMEMUsage
+        expr: (((node_memory_MemTotal-node_memory_MemFree-node_memory_Cached)/(node_memory_MemTotal)*100)) > 75
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          description: Memory usage is above 75%
+          summary: High MEM usage detected
+  acenodeload.rules: |-
+    groups:
+    - name: acenodeload.rules
+      rules:
+      - alert: aceNodeLoadUsage
+        expr: ((node_load5 / count without (cpu, mode) (node_cpu{mode="system"})) > 1)
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          description: Load is above 1
+          summary: High Load detected
+  acenodedisk.rules: |-
+    groups:
+    - name: acenodedisk.rules
+      rules:
+      - alert: aceDiskUsage
+        expr: ((node_filesystem_size{mountpoint="/"} - node_filesystem_free{mountpoint="/root-disk"} ) / node_filesystem_size{mountpoint="/root-disk"} * 100) > 75
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          description: Disk usage is above 75%
+          summary: High Disk Usage detected
+  acepodmemusage.rules: |-
+    groups:
+    - name: acepodmemusage.rules
+      rules:
+      - alert: acePodMemUsage
+        expr: (sum by (pod_name) (container_memory_usage_bytes) / (sum by (pod_name) (container_spec_memory_limit_bytes) > 0) * 100) > 80
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          description: Pod mem is above %80
+          summary: High mem usage for pod
+  acepodmemusagenill.rules: |-
+    groups:
+    - name: acepodmemusagenill.rules
+      rules:
+      - alert: acePodMemUsageNill
+        expr: (sum by (pod_name) (container_spec_memory_limit_bytes) < 1)
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          description: Pod mem is above %80
+          summary: High mem usage for pod
+kind: ConfigMap
+metadata:
+  name: acerules
+  labels:
+    prometheus: kube-prometheus
+    role: alert-rules
+  namespace: monitoring
